@@ -1,0 +1,56 @@
+---------------------------------------------------------------
+[ 2026-04-22T22:11:23+08:00 ] 127.0.0.1 POST wxfenxjshdk.com/index/promote/bind_id.html
+[运行时间：0.066403s] [吞吐率：15.06req/s] [内存消耗：2,771.12kb] [文件加载：68]
+[ info ] [ BEHAVIOR ] Run Closure @app_init [ RunTime:0.000603s ]
+[ info ] [ CACHE ] INIT File
+[ info ] [ BEHAVIOR ] Run Closure @app_init [ RunTime:0.003697s ]
+[ info ] [ BEHAVIOR ] Run app\common\behavior\Common @app_init [ RunTime:0.000991s ]
+[ info ] [ LANG ] D:\phpstudy_pro\WWW\wx\thinkphp\lang\zh-cn.php
+[ info ] [ BEHAVIOR ] Run app\common\behavior\Common @app_dispatch [ RunTime:0.000216s ]
+[ info ] [ ROUTE ] array (
+  'type' => 'module',
+  'module' => 
+  array (
+    0 => '',
+    1 => NULL,
+    2 => NULL,
+  ),
+)
+[ info ] [ HEADER ] array (
+  'cookie' => 'PHPSESSID=qhu1c47sjv3qs07les9219v2cs',
+  'accept-language' => 'zh-CN,zh;q=0.9',
+  'accept-encoding' => 'gzip, deflate',
+  'referer' => 'http://wxfenxjshdk.com/',
+  'origin' => 'http://wxfenxjshdk.com',
+  'content-type' => 'application/x-www-form-urlencoded; charset=UTF-8',
+  'accept' => '*/*',
+  'user-agent' => 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36',
+  'x-requested-with' => 'XMLHttpRequest',
+  'content-length' => '16',
+  'connection' => 'keep-alive',
+  'host' => 'wxfenxjshdk.com',
+)
+[ info ] [ PARAM ] array (
+  'game_id' => '12345678',
+)
+[ info ] [ LANG ] D:\phpstudy_pro\WWW\wx\public/../application/index\lang\zh-cn.php
+[ info ] [ BEHAVIOR ] Run app\common\behavior\Common @module_init [ RunTime:0.002051s ]
+[ info ] [ LANG ] D:\phpstudy_pro\WWW\wx\public/../application/index/lang/zh-cn/index.php
+[ info ] [ RUN ] app\index\controller\Index->index[ D:\phpstudy_pro\WWW\wx\application\index\controller\Index.php ]
+[ info ] [ VIEW ] D:\phpstudy_pro\WWW\wx\public/../application/index\view\index\index.html [ array (
+  0 => 'user',
+  1 => 'site',
+  2 => 'config',
+  3 => 'game_id',
+  4 => 'count',
+  5 => 'invite_base',
+  6 => 'customer_url',
+) ]
+[ info ] [ SESSION ] INIT array (
+  'id' => '',
+  'var_session_id' => '',
+  'prefix' => 'think',
+  'type' => '',
+  'auto_start' => true,
+)
+[ info ] [ LOG ] INIT File
