@@ -19,7 +19,7 @@ class DouyinCheck extends Command
         $startTime = date('Y-m-d H:i:s');
         $output->writeln("[{$startTime}] douyin:check started.");
 
-        $model = new \app\admin\model\DouyinLink();
+        $model = new \app\admin\model\Douyinlink();
 
         $list = Db::name('douyin_link')
             ->whereNull('delete_time')
