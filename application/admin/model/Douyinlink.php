@@ -16,12 +16,25 @@ class Douyinlink extends Model
     public function checkLink($row)
     {
         $now = date('Y-m-d H:i:s');
+        $id = is_array($row) ? (int)($row['id'] ?? 0) : (int)$row->id;
+        $url = is_array($row) ? ($row['url'] ?? '') : ($row->url ?? '');
+        $checkTimes = is_array($row) ? (int)($row['check_times'] ?? 0) : (int)($row->check_times ?? 0);
+
+        if (!$id) {
+            return ['success' => false, 'error' => '记录ID不存在'];
+        }
+
+        // 如果已被手动删除或标记失效，停止轮询
+        $currentStatus = Db::name('douyin_link')->where('id', $id)->value('status');
+        if (in_array($currentStatus, ['deleted', 'invalid'], true)) {
+            return ['success' => false, 'error' => '链接已失效，停止检测'];
+        }
 
         try {
-            $data = $this->parseDouyinLink($row['url']);
+            $data = $this->parseDouyinLink($url);
             if (empty($data['success'])) {
                 $errorMessage = $data['error'] ?? '解析失败';
-                $this->saveHistory($row, [
+                $this->saveHistory(['id' => $id, 'url' => $url], [
                     'final_url' => '',
                     'video_id' => '',
                     'author_name' => '',
@@ -29,16 +42,22 @@ class Douyinlink extends Model
                     'author_likes' => 0,
                     'video_like_count' => 0,
                     'comment_count' => 0,
-                    'status' => 'parse_fail',
+                    'status' => 'invalid',
                     'check_status' => 'fail',
                     'check_error' => $errorMessage,
                     'check_time' => $now,
                 ]);
-                $this->updateRetryState($row, $errorMessage, $now);
+                $this->markInvalid($id, $errorMessage, $now);
                 return ['success' => false, 'error' => $errorMessage];
             }
 
-            $this->saveHistory($row, [
+            $status = $data['status'] ?? 'normal';
+            $nextCheckTime = date('Y-m-d H:i:s', time() + 60); // 每分钟轮询
+            if (in_array($status, ['deleted', 'invalid'], true)) {
+                $nextCheckTime = null; // 失效后停止轮询
+            }
+
+            $this->saveHistory(['id' => $id, 'url' => $url], [
                 'final_url' => $data['final_url'] ?? '',
                 'video_id' => $data['video_id'] ?? '',
                 'author_name' => $data['author_name'] ?? '',
@@ -46,13 +65,13 @@ class Douyinlink extends Model
                 'author_likes' => (int)($data['author_likes'] ?? 0),
                 'video_like_count' => (int)($data['video_like_count'] ?? 0),
                 'comment_count' => (int)($data['comment_count'] ?? 0),
-                'status' => $data['status'] ?? 'normal',
+                'status' => $status,
                 'check_status' => 'success',
                 'check_error' => '',
                 'check_time' => $now,
             ]);
 
-            $row->save([
+            Db::name('douyin_link')->where('id', $id)->update([
                 'final_url' => $data['final_url'] ?? '',
                 'video_id' => $data['video_id'] ?? '',
                 'author_name' => $data['author_name'] ?? '',
@@ -60,19 +79,19 @@ class Douyinlink extends Model
                 'author_likes' => (int)($data['author_likes'] ?? 0),
                 'video_like_count' => (int)($data['video_like_count'] ?? 0),
                 'comment_count' => (int)($data['comment_count'] ?? 0),
-                'status' => $data['status'] ?? 'normal',
+                'status' => $status,
                 'check_status' => 'success',
                 'check_error' => '',
                 'check_times' => Db::raw('check_times+1'),
                 'last_check_time' => $now,
-                'next_check_time' => date('Y-m-d H:i:s', time() + 3600),
+                'next_check_time' => $nextCheckTime,
                 'update_time' => time(),
             ]);
 
             return $data;
         } catch (\Throwable $e) {
             $errorMessage = $e->getMessage();
-            $this->saveHistory($row, [
+            $this->saveHistory(['id' => $id, 'url' => $url], [
                 'final_url' => '',
                 'video_id' => '',
                 'author_name' => '',
@@ -80,36 +99,37 @@ class Douyinlink extends Model
                 'author_likes' => 0,
                 'video_like_count' => 0,
                 'comment_count' => 0,
-                'status' => 'parse_fail',
+                'status' => 'invalid',
                 'check_status' => 'fail',
                 'check_error' => $errorMessage,
                 'check_time' => $now,
             ]);
-            $this->updateRetryState($row, $errorMessage, $now);
+            $this->markInvalid($id, $errorMessage, $now);
             return ['success' => false, 'error' => $errorMessage];
         }
     }
 
-    protected function updateRetryState($row, $errorMessage, $now)
+    protected function markInvalid($id, $errorMessage, $now)
     {
-        $times = (int)$row['check_times'] + 1;
-        $delay = $times <= 1 ? 600 : ($times == 2 ? 1800 : ($times == 3 ? 7200 : 86400));
-
-        $row->save([
+        Db::name('douyin_link')->where('id', $id)->update([
             'check_status' => 'fail',
             'check_error' => $errorMessage,
             'check_times' => Db::raw('check_times+1'),
+            'status' => 'invalid',
             'last_check_time' => $now,
-            'next_check_time' => date('Y-m-d H:i:s', time() + $delay),
+            'next_check_time' => null,
             'update_time' => time(),
         ]);
     }
 
     protected function saveHistory($row, array $data)
     {
+        $id = is_array($row) ? (int)($row['id'] ?? 0) : (int)$row->id;
+        $url = is_array($row) ? ($row['url'] ?? '') : ($row->url ?? '');
+
         Db::name('douyin_link_log')->insert([
-            'link_id' => (int)$row['id'],
-            'url' => $row['url'] ?? '',
+            'link_id' => $id,
+            'url' => $url,
             'final_url' => $data['final_url'] ?? '',
             'video_id' => $data['video_id'] ?? '',
             'author_name' => $data['author_name'] ?? '',
@@ -230,13 +250,7 @@ class Douyinlink extends Model
 
             $response = curl_exec($ch);
             $info = curl_getinfo($ch);
-            $errno = curl_errno($ch);
-            $error = curl_error($ch);
             curl_close($ch);
-
-            if ($errno) {
-                continue;
-            }
 
             if (!empty($info['redirect_url'])) {
                 $current = $info['redirect_url'];

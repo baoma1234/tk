@@ -16,54 +16,65 @@ class DouyinCheck extends Command
 
     protected function execute(Input $input, Output $output)
     {
-        $this->logLine($output, 'douyin:check started', true);
+        $lockFile = $this->getLockFile();
 
-        $model = new \app\admin\model\Douyinlink();
-        $now = date('Y-m-d H:i:s');
+        if ($this->isLocked($lockFile)) {
+            $this->logLine($output, 'another process is running, exit', true);
+            return 0;
+        }
+
+        $this->createLock($lockFile);
 
         try {
+            $this->logLine($output, 'douyin:check started', true);
+
+            $model = new \app\admin\model\Douyinlink();
+            $now = date('Y-m-d H:i:s');
+
             $list = Db::name('douyin_link')
                 ->whereNull('delete_time')
                 ->where(function ($query) use ($now) {
                     $query->where('check_status', 'pending')
                         ->whereOr('next_check_time', '<=', $now)
-                        ->whereOr('next_check_time', 'null');
+                        ->whereOr('next_check_time', null);
                 })
                 ->order('id asc')
                 ->limit(20)
                 ->select();
-        } catch (\Throwable $e) {
-            $this->logLine($output, 'query failed: ' . $e->getMessage(), true);
-            return 1;
-        }
 
-        if (empty($list)) {
-            $this->logLine($output, 'No records to check', true);
+            if (empty($list)) {
+                $this->logLine($output, 'No records to check', true);
+                $this->logLine($output, 'douyin:check finished', true);
+                return 0;
+            }
+
+            $this->logLine($output, 'Found ' . count($list) . ' records', true);
+
+            foreach ($list as $row) {
+                $this->logLine($output, 'Checking ID=' . $row['id'] . ' URL=' . $row['url']);
+
+                try {
+                    $result = $model->checkLink($row);
+                    if (!empty($result['success'])) {
+                        $this->logLine($output, 'ID=' . $row['id'] . ' success', true);
+                    } else {
+                        $this->logLine($output, 'ID=' . $row['id'] . ' fail: ' . ($result['error'] ?? 'unknown error'), true);
+                    }
+                } catch (\Throwable $e) {
+                    $errorMessage = $e->getMessage();
+                    $this->logLine($output, 'ID=' . $row['id'] . ' exception: ' . $errorMessage, true);
+                    $this->saveFailure($row, $errorMessage);
+                }
+            }
+
             $this->logLine($output, 'douyin:check finished', true);
             return 0;
+        } catch (\Throwable $e) {
+            $this->logLine($output, 'fatal error: ' . $e->getMessage(), true);
+            return 1;
+        } finally {
+            $this->removeLock($lockFile);
         }
-
-        $this->logLine($output, 'Found ' . count($list) . ' records', true);
-
-        foreach ($list as $row) {
-            $this->logLine($output, 'Checking ID=' . $row['id'] . ' URL=' . $row['url']);
-
-            try {
-                $result = $model->checkLink($row);
-                if (!empty($result['success'])) {
-                    $this->logLine($output, 'ID=' . $row['id'] . ' success', true);
-                } else {
-                    $this->logLine($output, 'ID=' . $row['id'] . ' fail: ' . ($result['error'] ?? 'unknown error'), true);
-                }
-            } catch (\Throwable $e) {
-                $errorMessage = $e->getMessage();
-                $this->logLine($output, 'ID=' . $row['id'] . ' exception: ' . $errorMessage, true);
-                $this->saveFailure($row, $errorMessage);
-            }
-        }
-
-        $this->logLine($output, 'douyin:check finished', true);
-        return 0;
     }
 
     protected function logLine(Output $output, $message, $newline = true)
@@ -79,9 +90,60 @@ class DouyinCheck extends Command
         $this->appendLog($line);
     }
 
+    protected function getRuntimeDir()
+    {
+        if (defined('RUNTIME_PATH')) {
+            return rtrim(RUNTIME_PATH, DIRECTORY_SEPARATOR);
+        }
+
+        return rtrim(ROOT_PATH . 'runtime', DIRECTORY_SEPARATOR);
+    }
+
+    protected function getLockFile()
+    {
+        return $this->getRuntimeDir() . DIRECTORY_SEPARATOR . 'douyin_check.lock';
+    }
+
+    protected function isLocked($lockFile)
+    {
+        if (!file_exists($lockFile)) {
+            return false;
+        }
+
+        $mtime = @filemtime($lockFile);
+        if ($mtime === false) {
+            return false;
+        }
+
+        // 超过30分钟的锁视为失效，防止异常退出后一直锁住
+        if (time() - $mtime > 1800) {
+            @unlink($lockFile);
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function createLock($lockFile)
+    {
+        $dir = dirname($lockFile);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+
+        @file_put_contents($lockFile, getmypid() . '|' . date('Y-m-d H:i:s'));
+    }
+
+    protected function removeLock($lockFile)
+    {
+        if (file_exists($lockFile)) {
+            @unlink($lockFile);
+        }
+    }
+
     protected function appendLog($line)
     {
-        $runtimeDir = defined('RUNTIME_PATH') ? rtrim(RUNTIME_PATH, DIRECTORY_SEPARATOR) : rtrim(ROOT_PATH . 'runtime', DIRECTORY_SEPARATOR);
+        $runtimeDir = $this->getRuntimeDir();
         $logDir = $runtimeDir . DIRECTORY_SEPARATOR . 'log';
         $logFile = $logDir . DIRECTORY_SEPARATOR . 'douyin_check.log';
 

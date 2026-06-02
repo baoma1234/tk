@@ -123,4 +123,51 @@ class Douyinlink extends Backend
 
         $this->success('批量检测完成');
     }
+
+    /**
+     * 软删除/停检
+     */
+    public function delete($ids = null)
+    {
+        if (!$ids) {
+            $this->error('参数错误');
+        }
+
+        $idsArr = is_array($ids) ? $ids : explode(',', (string)$ids);
+        $now = date('Y-m-d H:i:s');
+
+        Db::name('douyin_link')
+            ->where('id', 'in', $idsArr)
+            ->update([
+                'status' => 'invalid',
+                'check_status' => 'fail',
+                'check_error' => '手动删除',
+                'next_check_time' => null,
+                'update_time' => time(),
+            ]);
+
+        foreach ($idsArr as $id) {
+            $row = Db::name('douyin_link')->where('id', (int)$id)->find();
+            if ($row) {
+                Db::name('douyin_link_log')->insert([
+                    'link_id' => (int)$row['id'],
+                    'url' => $row['url'],
+                    'final_url' => $row['final_url'] ?? '',
+                    'video_id' => $row['video_id'] ?? '',
+                    'author_name' => $row['author_name'] ?? '',
+                    'author_fans' => (int)($row['author_fans'] ?? 0),
+                    'author_likes' => (int)($row['author_likes'] ?? 0),
+                    'video_like_count' => (int)($row['video_like_count'] ?? 0),
+                    'comment_count' => (int)($row['comment_count'] ?? 0),
+                    'status' => 'invalid',
+                    'check_status' => 'fail',
+                    'check_error' => '手动删除',
+                    'check_time' => $now,
+                    'create_time' => time(),
+                ]);
+            }
+        }
+
+        $this->success('删除成功，已停止后续检测');
+    }
 }
