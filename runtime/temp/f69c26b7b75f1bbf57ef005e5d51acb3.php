@@ -1,0 +1,245 @@
+<?php if (!defined('THINK_PATH')) exit(); /*a:1:{s:75:"/www/wwwroot/wx.jyzf.bio/public/../application/index/view/index/index2.html";i:1777037305;}*/ ?>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>裂变中心 - 邀友全额返</title>
+    
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.6.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <style>
+        /* 全局样式 */
+        :root {
+            --gold: #ffcf4d;
+            --gold-dark: #f1b400;
+            --bg-dark: #120a07;
+        }
+
+        body { 
+            background: var(--bg-dark) url('assets/index/img/bk.jpg') center center no-repeat; 
+            background-size: cover;
+            background-attachment: fixed;
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            color: #fff;
+        }
+
+        /* PC端模拟手机的外壳 */
+        .phone-mockup {
+            width: 100%;
+            max-width: 414px; /* 模拟 iPhone Plus 宽度 */
+            height: 100vh;
+            background: rgba(20, 10, 5, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+
+        /* PC端特殊处理：增加圆角和边框，使其像手机 */
+        @media (min-width: 500px) {
+            .phone-mockup {
+                /*height: 800px;*/
+                border-radius: 40px;
+                border: 8px solid #2a2a2a;
+            }
+        }
+
+        .banner { width: 100%; border-bottom: 2px solid var(--gold); }
+
+        .main-body { padding: 30px 20px; flex: 1; overflow-y: auto; }
+
+        /* 核心卡片美化 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 207, 77, 0.2);
+            border-radius: 25px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .gold-title { 
+            font-size: 26px; font-weight: bold; color: var(--gold);
+            text-shadow: 0 0 15px rgba(255, 207, 77, 0.4);
+            margin-bottom: 10px;
+        }
+
+        /* 呼吸灯按钮动画 */
+        @keyframes glowing {
+            0% { box-shadow: 0 0 5px var(--gold-dark); }
+            50% { box-shadow: 0 0 20px var(--gold); }
+            100% { box-shadow: 0 0 5px var(--gold-dark); }
+        }
+
+         /* 黄金按钮 */
+        .btn-gold-action {
+            width: 100%; padding: 20px; border: none; border-radius: 20px;
+            background: linear-gradient(135deg, #ffcf4d 0%, #b38a1d 100%);
+            color: #432e00; font-size: 18px; font-weight: 900;
+            cursor: pointer; box-shadow: 0 15px 40px rgba(179,138,29,0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-gold-action:active { transform: scale(0.95); }
+
+        /* 输入框美化 */
+        .id-input {
+            background: rgba(0,0,0,0.4) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            color: var(--gold) !important;
+            border-radius: 15px;
+            height: 55px;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+        }
+        .id-input:focus { border-color: var(--gold) !important; box-shadow: none; }
+
+        /* 预览遮罩层 */
+        #poster-mask {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.96); z-index: 1000;
+            flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        #poster-res img { width: 100%; max-width: 320px; border-radius: 15px; border: 2px solid var(--gold); }
+
+        /* 隐藏的模板 */
+        #poster-tpl {
+            position: fixed; left: -9999px; top: 0;
+            width: 375px; height: 600px;
+            background: url('assets/index/img/tc2.jpg') no-repeat center center;
+            background-size: cover;
+            text-align: center; padding-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-mockup">
+  
+
+    <div class="main-body">
+        <div class="glass-card">
+            <div class="gold-title">裂变推广中心</div>
+           
+
+            <div style="text-align: left; margin-bottom: 8px; padding-left: 10px;">
+                <label class="small text-muted">输入游戏ID激活海报</label>
+            </div>
+            <input type="text" id="game_id" class="form-control id-input" placeholder="请输入您的ID" value="<?php echo $game_id; ?>" value="12345678">
+            
+           <button class="btn-gold-action" onclick="doBind()">
+            <i class="fa fa-qrcode"></i> 激活并生成专属海报
+        </button>
+            
+            <a href="<?php echo $customer_url; ?>" class="btn btn-link btn-block mt-3" style="color: #5bc0de; font-size: 14px;">
+                <i class="fa fa-headphones mr-1"></i> 联系官方客服
+            </a>
+              <img src="assets/index/img/750x350.jpg" class="banner">
+        </div>
+        
+    </div>
+
+    <div style="padding: 20px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.3);">
+        * 成功绑定后分享海报即可获得全额返现资格
+    </div>
+
+    <div id="poster-mask">
+        <div id="poster-res">
+            <div style="color: var(--gold); text-align: center;">
+                <i class="fa fa-spinner fa-spin fa-3x"></i>
+                <p class="mt-3">正在为您渲染高清海报...</p>
+            </div>
+        </div>
+        <div style="width: 100%; max-width: 320px; margin-top: 25px;">
+            <button class="btn btn-warning btn-block font-weight-bold" style="border-radius: 50px; height: 45px;" onclick="copyAction(event)">
+                <i class="fa fa-copy mr-1"></i> 复制专属链接
+            </button>
+            <div class="text-center mt-3">
+                <span style="color: #fff; font-size: 13px;" onclick="$('#poster-mask').hide()">
+                    <i class="fa fa-times-circle mr-1"></i> 关闭预览并修改
+                </span>
+            </div>
+            <p style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 10px;">提示：长按上方图片保存到手机</p>
+        </div>
+    </div>
+</div>
+
+<div id="poster-tpl">
+    <!--<h2 style="color:#ffcf4d; font-size:38px; font-weight:bold; text-shadow: 2px 2px 4px #000;">全额返现劵</h2>-->
+    <!--<p style="color:#fff; font-size:20px; margin-top:10px;">推荐人ID: <span id="tpl-uid-draw"></span></p>-->
+    <div id="qrcode" style="
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%); /* 水平居中 */
+        bottom: 33%; /* 关键：距离底部 1/3 (约33%) 的位置 */
+        background: #fff;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        line-height: 0; /* 防止内边距偏移 */
+    ">></div>
+    <!--<p style="color:#ffcf4d; font-size:24px; font-weight:bold; letter-spacing:1px;">扫码注册 · 充值立返现金</p>-->
+</div>
+
+<textarea id="copyHelper" style="position:absolute;left:-9999px;"></textarea>
+
+<script src="https://cdn.staticfile.org/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script src="https://cdn.staticfile.org/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+    var finalUrl = "";
+
+    function doBind() {
+        var gid = $('#game_id').val();
+        if(!gid) return alert('请输入游戏ID');
+
+        $.post('<?php echo url("index/index/bind_id"); ?>', {game_id: gid}, function(res) {
+            finalUrl = "<?php echo $invite_base; ?>" + "?id=" + gid;
+            $('#tpl-uid-draw').text(gid);
+            
+            // 显示遮罩
+            $('#poster-mask').css('display','flex');
+            
+            // 生成二维码
+            $('#qrcode').empty().qrcode({ 
+                width: 160, height: 160, text: finalUrl 
+            });
+
+            // 渲染海报
+            setTimeout(function() {
+                var target = document.querySelector("#poster-tpl");
+                html2canvas(target, {
+                    scale: 3, // 提高清晰度
+                    useCORS: true,
+                    backgroundColor: null
+                }).then(function(canvas) {
+                    var img = canvas.toDataURL("image/png");
+                    $('#poster-res').html('<img src="'+img+'">');
+                });
+            }, 800);
+        });
+    }
+
+    function copyAction(e) {
+        e.stopPropagation();
+        var helper = document.getElementById("copyHelper");
+        helper.value = finalUrl;
+        helper.select();
+        document.execCommand("copy");
+        alert("邀请链接已复制！您可以发给好友了。");
+    }
+</script>
+</body>
+</html>
