@@ -13,13 +13,15 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
             });
 
             var table = $("#table");
-
             table.bootstrapTable({
                 url: $.fn.bootstrapTable.defaults.extend.index_url,
                 toolbar: '#toolbar',
                 pk: 'id',
                 sortName: 'id',
-                search: false,
+                search: true,
+                pagination: true,
+                pageSize: 10,
+                pageList: [10, 20, 50, 100],
                 columns: [[
                     {checkbox: true},
                     {field: 'id', title: 'ID', sortable: true},
@@ -36,22 +38,21 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                     {
                         field: 'operate',
                         title: '操作',
+                        table: table,
                         events: {
-                            'click .btn-view-history': function (e, value, row, index) {
+                            'click .btn-view-history': function (e, value, row) {
                                 e.stopPropagation();
                                 Fast.api.open('douyinlinklog/history?link_id=' + row.id, '查看历史记录');
                             },
-                            'click .btn-check-now': function (e, value, row, index) {
+                            'click .btn-check-now': function (e, value, row) {
                                 e.stopPropagation();
-                                Fast.api.ajax({
-                                    url: 'douyinlink/checknow/ids/' + row.id
-                                }, function () {
+                                Fast.api.ajax({url: 'douyinlink/checknow/ids/' + row.id}, function () {
                                     Toastr.success('检测完成');
                                     Table.api.refreshContent();
                                 });
                             }
                         },
-                        formatter: function (value, row, index) {
+                        formatter: function () {
                             return [
                                 '<a href="javascript:;" class="btn btn-xs btn-info btn-view-history"><i class="fa fa-history"></i> 查看历史</a>',
                                 ' <a href="javascript:;" class="btn btn-xs btn-warning btn-check-now"><i class="fa fa-refresh"></i> 立即检测</a>'
@@ -63,11 +64,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
 
             Table.api.bindevent(table);
         },
-
         batchadd: function () {
             Controller.api.bindevent();
         },
-
         api: {
             bindevent: function () {
                 Form.api.bindevent($("form[role=form]"));
