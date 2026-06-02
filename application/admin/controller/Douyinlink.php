@@ -94,11 +94,6 @@ class Douyinlink extends Backend
         return $this->view->fetch('batch_add');
     }
 
-    public function batch_add($ids = null)
-    {
-        return $this->batchAdd();
-    }
-
     public function checkNow($ids = null)
     {
         $row = $this->model->get($ids);
