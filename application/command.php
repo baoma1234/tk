@@ -11,11 +11,11 @@
 // +----------------------------------------------------------------------
 
 return [
-    'app\admin\command\Crud',
-    'app\admin\command\Menu',
-    'app\admin\command\Install',
-    'app\admin\command\Min',
-    'app\admin\command\Addon',
-    'app\admin\command\Api',
-    'app\command\DouyinCheck',
+    \app\admin\command\Crud::class,
+    \app\admin\command\Menu::class,
+    \app\admin\command\Install::class,
+    \app\admin\command\Min::class,
+    \app\admin\command\Addon::class,
+    \app\admin\command\Api::class,
+    \app\command\DouyinCheck::class,
 ];
