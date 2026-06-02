@@ -29,6 +29,11 @@ class Douyinlink extends Backend
 
     public function batchAdd()
     {
+        return $this->batch_add();
+    }
+
+    public function batch_add()
+    {
         if ($this->request->isPost()) {
             $content = $this->request->post('content/s', '');
             if (!$content) {
@@ -86,7 +91,12 @@ class Douyinlink extends Backend
             $this->success('批量添加成功，共插入 ' . count($insertData) . ' 条');
         }
 
-        return $this->view->fetch();
+        return $this->view->fetch('batch_add');
+    }
+
+    public function batch_add($ids = null)
+    {
+        return $this->batchAdd();
     }
 
     public function checkNow($ids = null)
